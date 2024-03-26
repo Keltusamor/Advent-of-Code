@@ -7,63 +7,51 @@ public partial class Day01
     [Fact]
     public void Part1()
     {
-        Assert.Equal(52974, Deserialize(File.ReadAllText("Day01Input.txt"), FindFirstAndLastNumberFromZeroToNine())
-            .Sum(x => x.CombinedNumber));
+        var number = File.ReadAllLines("Day01Input.txt")
+            .Select(CombineFirstAndLastDigit)
+            .Sum();
+        Assert.Equal(52974, number);
     }
 
-    // First group has to be a lookahead because input might have only one number so it should not be consumed
-    [GeneratedRegex("(?=(?'first'[0-9])).*(?'last'[0-9])", RegexOptions.Multiline)]
-    private static partial Regex FindFirstAndLastNumberFromZeroToNine();
+    private static int CombineFirstAndLastDigit(string line)
+    {
+        var first = line.First(char.IsDigit).ToString();
+        var last = line.Last(char.IsDigit).ToString();
+        return int.Parse(first + last);
+    }
 
     [Fact]
     public void Part2()
     {
-        var entries = Deserialize(File.ReadAllText("Day01Input.txt"), FindFirstAndLastNumberFromZeroToNineIncludingWords());
-        entries.ForEach(entry =>
-        {
-            entry.FirstNumber = ConvertWordToNumber(entry.FirstNumber);
-            entry.LastNumber = ConvertWordToNumber(entry.LastNumber);
-        });
-        Assert.Equal(53340, entries.Sum(x => x.CombinedNumber));
+        var number = File.ReadAllLines("Day01Input.txt")
+            .Select(CombineFirstAndLastDigitIncludingWords)
+            .Sum();
+        Assert.Equal(53340, number);
     }
 
-    // First group has to be a lookahead because input might have only one number so it should not be consumed
-    [GeneratedRegex("(?=(?'first'[0-9]|zero|one|two|three|four|five|six|seven|eight|nine)).*(?'last'[0-9]|zero|one|two|three|four|five|six|seven|eight|nine)", RegexOptions.Multiline)]
+    private static int CombineFirstAndLastDigitIncludingWords(string line)
+    {
+        var match = FindFirstAndLastNumberFromZeroToNineIncludingWords().Matches(line)[0];
+        var first = Map(match.Groups["first"].Value);
+        var last = Map(match.Groups["last"].Value);
+        return int.Parse(first + last);
+    }
+
+    // First group has to be a lookahead because some lines contain only one number and others contain overlapping numbers like 'twone'
+    [GeneratedRegex(@"(?=(?'first'[0-9]|zero|one|two|three|four|five|six|seven|eight|nine)).*(?'last'[0-9]|zero|one|two|three|four|five|six|seven|eight|nine)", RegexOptions.Multiline)]
     private static partial Regex FindFirstAndLastNumberFromZeroToNineIncludingWords();
 
-    private static string ConvertWordToNumber(string number)
+    private static string Map(string number) => number switch
     {
-        return number switch
-        {
-            "one" => "1",
-            "two" => "2",
-            "three" => "3",
-            "four" => "4",
-            "five" => "5",
-            "six" => "6",
-            "seven" => "7",
-            "eight" => "8",
-            "nine" => "9",
-            _ => number
-        };
-    }
-
-    private class Entry
-    {
-        public string FirstNumber { get; set; } = string.Empty;
-        public string LastNumber { get; set; } = string.Empty;
-        public int CombinedNumber => int.Parse(FirstNumber + LastNumber);
-    }
-
-    private static List<Entry> Deserialize(string input, Regex regex)
-    {
-        return regex
-            .Matches(input)
-            .Select(match => new Entry
-            {
-                FirstNumber = match.Groups["first"].Value,
-                LastNumber = match.Groups["last"].Value
-            })
-            .ToList();
-    }
+        "one" => "1",
+        "two" => "2",
+        "three" => "3",
+        "four" => "4",
+        "five" => "5",
+        "six" => "6",
+        "seven" => "7",
+        "eight" => "8",
+        "nine" => "9",
+        _ => number
+    };
 }
